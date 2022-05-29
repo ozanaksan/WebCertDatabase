@@ -1,0 +1,531 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+---
+--- drop tables
+---
+DROP TABLE IF EXISTS katilimci;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS konusmaci;
+DROP TABLE IF EXISTS kurum;
+DROP TABLE IF EXISTS sertifika;
+DROP TABLE IF EXISTS sertifika_image;
+DROP TABLE IF EXISTS etkinlik;
+DROP TABLE IF EXISTS etkinlik_image;
+DROP TABLE IF EXISTS etkinlik_katilimci;
+DROP TABLE IF EXISTS etkinlik_konusmaci;
+DROP TABLE IF EXISTS etkinlik_kurum;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE users
+(
+    id serial NOT NULL,
+    email character varying(255),
+    password character varying(255),
+    CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+
+--
+-- Name: katilimci; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE katilimci
+(
+    katilimci_id serial NOT NULL,
+    katilimci_ad character varying NOT NULL,
+    katilimci_soyad character varying NOT NULL,
+    telefon CHARACTER(15) NOT NULL,
+    universite character varying,
+    bolum character varying,
+    sinif character varying,
+    ogrenimdurumu character varying NOT NULL,
+    user_id integer,
+    CONSTRAINT "katılımcı_pkey" PRIMARY KEY (katilimci_id),
+    CONSTRAINT userkatilimci FOREIGN KEY (user_id)
+        REFERENCES users (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+
+--
+-- Name: konusmaci; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE konusmaci
+(
+    konusmaci_id serial NOT NULL,
+    konusmaci_ad character varying NOT NULL,
+    konusmaci_soyad character varying NOT NULL,
+    CONSTRAINT konusmaci_pkey PRIMARY KEY (konusmaci_id)
+);
+
+--
+-- Name: kurum; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE kurum
+(
+    kurum_id serial NOT NULL,
+    kurum_ad character varying NOT NULL,
+    kurum_aciklama character varying,
+    adres character varying NOT NULL,
+    yetkili_ad character varying NOT NULL,
+    yetkili_soyad character varying NOT NULL,
+    yetkili_tel CHARACTER(15) NOT NULL,
+    user_id integer,
+    CONSTRAINT kurum_pkey PRIMARY KEY (kurum_id),
+    CONSTRAINT userkurum FOREIGN KEY (user_id)
+        REFERENCES users (id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: sertifika; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE sertifika
+(
+    sertifika_id serial NOT NULL,
+    sertifika_ad character varying NOT NULL,
+    sertifika_metni character varying NOT NULL,
+    CONSTRAINT sertifika_pkey PRIMARY KEY (sertifika_id)
+);
+
+--
+-- Name: sertifika_image; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE sertifika_image
+(
+    sertifika_image_id serial NOT NULL,
+    image character varying NOT NULL,
+    public_image character varying NOT NULL,
+    sertifika_id integer NOT NULL,
+    PRIMARY KEY (sertifika_image_id),
+    CONSTRAINT sertifika_image FOREIGN KEY (sertifika_id)
+        REFERENCES sertifika (sertifika_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: etkinlik; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE etkinlik
+(
+    etkinlik_id serial NOT NULL,
+    etkinlik_ad character varying NOT NULL,
+    etkinlik_aciklama character varying,
+    tarih date NOT NULL,
+    yer character varying NOT NULL,
+    sertifika_image_id integer NOT NULL,
+    CONSTRAINT etkinlik_pkey PRIMARY KEY (etkinlik_id),
+    CONSTRAINT etkinlikvesertifikaimage FOREIGN KEY (sertifika_image_id)
+        REFERENCES sertifika_image (sertifika_image_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: etkinlik_image; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE etkinlik_image
+(
+    etkinlik_image_id serial NOT NULL,
+    afis_resmi character varying NOT NULL,
+    afis_image character varying NOT NULL,
+    etkinlik_id integer NOT NULL,
+    PRIMARY KEY (etkinlik_image_id),
+    CONSTRAINT etkinlik_image FOREIGN KEY (etkinlik_id)
+        REFERENCES etkinlik (etkinlik_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: etkinlik_katilimci; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE etkinlik_katilimci
+(
+    etkinlik_katilimci_id serial NOT NULL,
+    etkinlik_id integer NOT NULL,
+    katilimci_id integer NOT NULL,
+    CONSTRAINT etkinlik_katilimci_pkey PRIMARY KEY (etkinlik_katilimci_id),
+    CONSTRAINT etkinlikfk FOREIGN KEY (etkinlik_id)
+        REFERENCES etkinlik (etkinlik_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT katilimcifk FOREIGN KEY (katilimci_id)
+        REFERENCES katilimci (katilimci_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: etkinlik_konusmaci; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE etkinlik_konusmaci
+(
+    etkinlik_konusmaci_id serial NOT NULL,
+    etkinlik_id integer NOT NULL,
+    konusmaci_id integer NOT NULL,
+    CONSTRAINT etkinlik_konusmaci_pkey PRIMARY KEY (etkinlik_konusmaci_id),
+    CONSTRAINT etkinlikfk FOREIGN KEY (etkinlik_id)
+        REFERENCES etkinlik (etkinlik_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT konusmacifk FOREIGN KEY (konusmaci_id)
+        REFERENCES konusmaci (konusmaci_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+--
+-- Name: etkinlik_kurum; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE etkinlik_kurum
+(
+    etkinlik_kurum_id serial NOT NULL,
+    etkinlik_id integer NOT NULL,
+    kurum_id integer NOT NULL,
+    CONSTRAINT etkinlik_kurum_pkey PRIMARY KEY (etkinlik_kurum_id),
+    CONSTRAINT etkinlikfk FOREIGN KEY (etkinlik_id)
+        REFERENCES etkinlik (etkinlik_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    CONSTRAINT kurumfk FOREIGN KEY (kurum_id)
+        REFERENCES kurum (kurum_id) MATCH SIMPLE
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'cipe@gmail.com'::character varying, '745866'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'atac@gmail.com'::character varying, '785696'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'hetedört@gmail.com'::character varying, '789652'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'batuuu@gmail.com'::character varying, '001122'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'topyaren@gmail.com'::character varying, '741256'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'habibalem@gmail.com
+'::character varying, '412563'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'ozanaksan@gmail.com'::character varying, '123456'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'sudenaz@gmail.com'::character varying, '785693'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'ayaz@gmail.com'::character varying, '111222'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'yıldız@gmail.com'::character varying, '1234567'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'kusatma@gmail.com'::character varying, '987654'::character varying);
+
+INSERT INTO public.users (
+email, password) VALUES (
+'ozak@gmail.com'::character varying, '654321'::character varying);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'İsmail'::character varying, 'Çipe'::character varying, '05344567276', 'Karadeniz Teknik Üniversitesi'::character varying, 'Bilgisayar Mühendisliği'::character varying, '2'::character varying, 'okuyor
+'::character varying,'1'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'İsmail'::character varying, 'Ataç'::character varying, '05322631276', 'Karadeniz Teknik Üniversitesi'::character varying, 'Bilgisayar Mühendisliği'::character varying, '3'::character varying, 'okuyor
+'::character varying,'2'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Hüseyin'::character varying, 'Türkmen
+'::character varying, '05313613161', 'İstanbul Üniversitesi'::character varying, 'Beden Eğitimi
+'::character varying, '1
+'::character varying, 'okuyor
+'::character varying,'3'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Batuhan
+'::character varying, 'Çoruhlu'::character varying, '05334589656', 'Orta Doğu Teknik Üniversitesi'::character varying, 'Makine Mühendisliği
+'::character varying, '2
+'::character varying, 'okuyor
+'::character varying,'4'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Yaren'::character varying, 'Topcu'::character varying, '05664785596', 'İstanbul Teknik Üniversitesi'::character varying, 'İnşaat Mühendisliği'::character varying, '2'::character varying, 'okuyor'::character varying,'5'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Habibcan '::character varying, 'Alemdar'::character varying, '05336985698', 'Karadeniz Teknik Üniversitesi'::character varying, 'Mimarlık'::character varying, '4'::character varying, 'okuyor'::character varying,'6'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Çağatay Ozan'::character varying, 'Akşan'::character varying, '05318390440', 'Karadeniz Teknik Üniversitesi'::character varying, 'Bilgisayar Mühendisliği'::character varying, '4'::character varying, 'okuyor'::character varying,'7'::integer);
+
+INSERT INTO public.katilimci (
+katilimci_ad, katilimci_soyad, telefon, universite, bolum, sinif, ogrenimdurumu, user_id) VALUES (
+'Sude'::character varying, 'Naz'::character varying, '05394321226', 'Yıldız Teknik Üniversitesi'::character varying, 'Fizik Bölümü'::character varying, '1'::character varying, 'okuyor
+'::character varying,'8'::integer);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Ahmet'::character varying, 'Kara'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Ali'::character varying, 'Yıldız'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Demir'::character varying, 'Yaman'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Arzu'::character varying, 'Sarı'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Birkan'::character varying, 'Güzel'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Ezgi'::character varying, 'Soyar'::character varying);
+
+INSERT INTO public.kurum (
+kurum_ad, kurum_aciklama, adres, yetkili_ad, yetkili_soyad, yetkili_tel, user_id) VALUES (
+'Ayaz Akademi'::character varying, 'Ayaz Akademi üniversite sınavların tercih edeceğiniz güzel bir yuvadır'::character varying, 'Kaşüstü Mah. Cevahir Avm Karşısı No:46'::character varying, 'Özkan'::character varying, 'Ayaz'::character varying, '05462622661', '9'::integer);
+
+INSERT INTO public.kurum (
+kurum_ad, kurum_aciklama, adres, yetkili_ad, yetkili_soyad, yetkili_tel, user_id) VALUES (
+'Yıldız Makina'::character varying, 'Makinalar geleceğin yıldızlarıdır'::character varying, 'Ortakale Mah. Nizamiye Sok. No:2'::character varying, 'Ayşe'::character varying, 'Yıldız'::character varying, '05362342451', '10'::integer);
+
+INSERT INTO public.kurum (
+kurum_ad, kurum_aciklama, adres, yetkili_ad, yetkili_soyad, yetkili_tel, user_id) VALUES (
+'Kuşatma Teknoloji'::character varying, 'Türkiye''yi gençliğimizle ve azmimizle kuşatıyoruz.'::character varying, 'Ortahisar Mahallesi Kuzgundere Caddesi no13/33 kat 1'::character varying, 'Uğurcan'::character varying, 'Çakır'::character varying, '05316615661', '11'::integer);
+
+INSERT INTO public.kurum (
+kurum_ad, kurum_aciklama, adres, yetkili_ad, yetkili_soyad, yetkili_tel, user_id) VALUES (
+'Öz-Ak Yazılım'::character varying, 'Yazılım sektöründe altmış 1 numarayız.'::character varying, 'Pelitli Mah. Vatan caddesi No:13 Kat 7'::character varying, 'Recep'::character varying, 'Özkan'::character varying, '05345638563', '12'::integer);
+
+INSERT INTO public.sertifika (
+sertifika_ad, sertifika_metni) VALUES (
+'Fizik Öğrenme Sertifikası'::character varying, 'Katılımcımız bu sertifikayı almak için katılması gereken etkinliğe katılarak bu sertifikayı almaya hak kazanmıştır.'::character varying);
+
+INSERT INTO public.sertifika (
+sertifika_ad, sertifika_metni) VALUES (
+'Makine Öğrenme Sertifikası'::character varying, 'Katılımcımız bu sertifikayı almak için katılması gereken etkinliğe katılarak bu sertifikayı almaya hak kazanmıştır.'::character varying);
+ 
+INSERT INTO public.sertifika (
+sertifika_ad, sertifika_metni) VALUES (
+'C Programlama Sertifikası'::character varying, 'Katılımcımız bu sertifikayı almak için katılması gereken etkinliğe katılarak bu sertifikayı almaya hak kazanmıştır.'::character varying);
+
+INSERT INTO public.sertifika (
+sertifika_ad, sertifika_metni) VALUES (
+'Pyhton ile Programlama Sertifikası'::character varying, 'Katılımcımız bu sertifikayı almak için katılması gereken etkinliğe katılarak bu sertifikayı almaya hak kazanmıştır.'::character varying);
+
+INSERT INTO public.sertifika (
+sertifika_ad, sertifika_metni) VALUES (
+'Konuşma ve Dinleme Sertifikası'::character varying, 'Katılımcımız bu sertifikayı almak için katılması gereken etkinliğe katılarak bu sertifikayı almaya hak kazanmıştır.'::character varying);
+
+INSERT INTO public.sertifika_image (
+image, public_image, sertifika_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652698395/alefoxnry3zogok0syb4.jpg'::character varying, 'alefoxnry3zogok0syb4'::character varying, '1'::integer);
+
+INSERT INTO public.sertifika_image (
+image, public_image, sertifika_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699399/d6qnxn5kufkgoepu7zfv.jpg'::character varying, 'd6qnxn5kufkgoepu7zfv'::character varying, '2'::integer);
+
+INSERT INTO public.sertifika_image (
+image, public_image, sertifika_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699480/jw72f6zkdc4hizjjzvuv.jpg'::character varying, 'jw72f6zkdc4hizjjzvuv'::character varying, '3'::integer);
+
+INSERT INTO public.sertifika_image (
+image, public_image, sertifika_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699516/hwawee3nnp4m25tlzwvq.jpg'::character varying, 'hwawee3nnp4m25tlzwvq'::character varying, '4'::integer);
+
+INSERT INTO public.sertifika_image (
+image, public_image, sertifika_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699554/laniji3vc11plp4saj1b.jpg'::character varying, 'laniji3vc11plp4saj1b'::character varying, '5'::integer);
+
+INSERT INTO public.etkinlik (
+etkinlik_ad, etkinlik_aciklama, tarih, yer, sertifika_image_id) VALUES (
+'Fizik Öğrenme Etkinliği'::character varying, 'Fizik derslerimizin işleneceği konusunda profesör hocalarımızın katılımıyla gerçekleşecek etkinliğimizdir.'::character varying, '20.02.2022'::date, 'Yomra/Trabzon'::character varying, '1'::integer);
+
+INSERT INTO public.etkinlik (
+etkinlik_ad, etkinlik_aciklama, tarih, yer, sertifika_image_id) VALUES (
+'Makine Öğrenme Etkinliği'::character varying, 'Makine öğrenme derslerimizin işleneceği konusunda profesör hocalarımızın katılımıyla gerçekleşecek etkinliğimizdir.'::character varying, '23.05.2022'::date, 'Beyoğlu/İstanbul'::character varying, '2'::integer);
+
+INSERT INTO public.etkinlik (
+etkinlik_ad, etkinlik_aciklama, tarih, yer, sertifika_image_id) VALUES (
+'C Programlama Etkinliği'::character varying, 'C derslerimizin işleneceği konusunda profesör hocalarımızın katılımıyla gerçekleşecek etkinliğimizdir.'::character varying, '12.02.2022'::date, 'Çankaya/Ankara'::character varying, '3'::integer);
+
+INSERT INTO public.etkinlik (
+etkinlik_ad, etkinlik_aciklama, tarih, yer, sertifika_image_id) VALUES (
+'Python ile Programlama Etkinliği'::character varying, 'Pyhton ile programlama derslerimizin işleneceği konusunda profesör hocalarımızın katılımıyla gerçekleşecek etkinliğimizdir.'::character varying, '05.04.2022'::date, 'Gaziosmanpaşa/İstanbul'::character varying, '4'::integer);
+
+INSERT INTO public.etkinlik (
+etkinlik_ad, etkinlik_aciklama, tarih, yer, sertifika_image_id) VALUES (
+'Konuşma ve Dinleme Etkinliği'::character varying, 'Konuşma ve dinleme üzerine konuşmalar yapılacağı konusunda profesör hocalarımızın katılımıyla gerçekleşecek etkinliğimizdir.'::character varying, '11.10.2021'::date, 'Ortahisar/Trabzon'::character varying, '5'::integer);
+
+INSERT INTO public.etkinlik_image (
+afis_resmi, afis_image, etkinlik_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652698889/zbi5mabyzponvssvj7i6.jpg'::character varying, 'zbi5mabyzponvssvj7i6'::character varying, '1'::integer);
+
+INSERT INTO public.etkinlik_image (
+afis_resmi, afis_image, etkinlik_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652698993/uobyhpanbahskuhmsiad.jpg'::character varying, 'uobyhpanbahskuhmsiad'::character varying, '2'::integer);
+
+INSERT INTO public.etkinlik_image (
+afis_resmi, afis_image, etkinlik_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699111/ruodll2gcvzy3ij6t21l.jpg'::character varying, 'ruodll2gcvzy3ij6t21l'::character varying, '3'::integer);
+
+INSERT INTO public.etkinlik_image (
+afis_resmi, afis_image, etkinlik_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699186/uczd9fjltrflgq8c0idx.jpg'::character varying, 'uczd9fjltrflgq8c0idx'::character varying, '4'::integer);
+
+INSERT INTO public.etkinlik_image (
+afis_resmi, afis_image, etkinlik_id) VALUES (
+'https://res.cloudinary.com/dp6gr7men/image/upload/v1652699313/vbnkfqspuavugzmcljgt.jpg'::character varying, 'vbnkfqspuavugzmcljgt'::character varying, '5'::integer);
+
+INSERT INTO public.etkinlik_konusmaci (
+etkinlik_id, konusmaci_id) VALUES (
+'2'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_konusmaci (
+etkinlik_id, konusmaci_id) VALUES (
+'1'::integer, '2'::integer);
+
+INSERT INTO public.etkinlik_konusmaci (
+etkinlik_id, konusmaci_id) VALUES (
+'3'::integer, '3'::integer);
+
+INSERT INTO public.etkinlik_konusmaci (
+etkinlik_id, konusmaci_id) VALUES (
+'5'::integer, '6'::integer);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Ömer Faruk'::character varying, 'Aktunç'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Ercan 
+'::character varying, 'İnce'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Hüseyin Avni'::character varying, 'Aker'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Uğurcan '::character varying, 'Çakır'::character varying);
+
+INSERT INTO public.konusmaci (
+konusmaci_ad, konusmaci_soyad) VALUES (
+'Abdullah'::character varying, 'Avcı'::character varying);
+
+INSERT INTO public.etkinlik_konusmaci (
+etkinlik_id, konusmaci_id) VALUES (
+'4'::integer, '11'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'2'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'1'::integer, '2'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'2'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'1'::integer, '2'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'3'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'4'::integer, '2'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'5'::integer, '3'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'3'::integer, '3'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'5'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'4'::integer, '8'::integer);
+
+INSERT INTO public.etkinlik_katilimci (
+etkinlik_id, katilimci_id) VALUES (
+'3'::integer, '7'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'4'::integer, '2'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'5'::integer, '1'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'3'::integer, '4'::integer);
+
+INSERT INTO public.etkinlik_kurum (
+etkinlik_id, kurum_id) VALUES (
+'1'::integer, '3'::integer);
